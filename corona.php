@@ -8,8 +8,14 @@ $arr=json_decode($json,true);
 $total = count($arr['features']);
 
 for($i=0; $i<=$total; $i++) {
-  echo $arr['features'][$i]["properties"]["受診都道府県"]."<br>";
+  $array[] = $arr['features'][$i]["properties"]["受診都道府県"];
 }
+
+foreach($array as $data){
+  $counts = array_count_values($array);
+}
+echo $counts['北海道'];
+
 
 // foreach($arr as $data => $key){
   //   $ja= "都道府県名　".$data['name_ja']."\n"."<br>".PHP_EOL;
