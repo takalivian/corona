@@ -1,49 +1,179 @@
 <?php
 
-$url="https://services6.arcgis.com/5jNaHNYe2AnnqRnS/arcgis/rest/services/COVID19_JapanData/FeatureServer/0/query?where=%E9%80%9A%E3%81%97%3E0&returnIdsOnly=false&returnCountOnly=false&&f=pgeojson&outFields=*&orderByFields=%E9%80%9A%E3%81%97";
+ 
+
+$url="https://data.corona.go.jp/converted-json/covid19japan-all.json";
+
 $json=file_get_contents($url);
-//$json=mb_detect_encoding($json,'UTF-8','ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
+
 $arr=json_decode($json,true);
 
-$total = count($arr['features']);
+ 
 
-for($i=0; $i<=$total; $i++) {
-  $array[] = $arr['features'][$i]["properties"]["受診都道府県"];
+$total = count($arr['0']["area"]);
+
+ 
+
+for($i=0; $i<$total; $i++) {
+
+  $name[] = $arr[0]["area"][$i]["name_jp"];
+
+  $npa[] = $arr[0]["area"][$i]["npatients"];
+
 }
 
-foreach($array as $data){
-  $counts = array_count_values($array);
-}
-echo $counts['北海道'];
+ 
 
+$param = json_encode( $arr );
 
-// foreach($arr as $data => $key){
-  //   $ja= "都道府県名　".$data['name_ja']."\n"."<br>".PHP_EOL;
-  //   $cases= "発生件数　　".$data['cases']."人\n"."<br>".PHP_EOL;
-  //   $deaths= "死者数　　　".$data['deaths']."人\n"."<br>".PHP_EOL;
-  //   $pcr= "pcr件数　　".$data['pcr']."人\n"."<br>".PHP_EOL;
-  //  $virusData= array(
-  //     $ja,$cases,$deaths,$pcr,
-  //  );
-// echo implode('',$virusData);
-// }
+ 
 
 ?>
 
+ 
 
-<!-- #都道府県別コロナ感染者数集計
+<!DOCTYPE html>
 
-#課題内容
-https://jag-japan.com/covid19map-readme/
-上記ページからCSVまたAPIにてデータを取得し、都道府県別の感染者数を集計してください。
+<html>
 
-都道府県の識別は”受信都道府県”カラムを利用してください。
-感染日の識別は"確定日"カラムを利用してください。
+<head>
 
-#制限時間
-90分間
+    <title>Japan Map</title>
 
-#評価観点
--集計結果の正確性
--集計パターン(受診日ごとの分析等、高度な分析ができればなお可)
--集計結果の見やすさ(グラフ等でわかりやすく視覚化できればなお可) -->
+    <link rel="stylesheet" href="corona.css">
+
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js" integrity="sha256-wS9gmOZBqsqWxgIVgA8Y9WcQOa7PgSIX+rPA0VL2rbQ=" crossorigin="anonymous"></script>
+
+    <script src="./jquery.japan-map.js"></script>
+
+    <script>
+
+    // PHPからjson取得
+
+    var param = JSON.parse('<?php echo $param; ?>');
+
+    // 都道府県
+
+    var area = param[0]["area"];
+
+ 
+
+    </script>
+
+ 
+
+    <script>
+
+        $(function(){
+
+            let areas = []
+
+            for (let i = 1; i < 48; i++) {
+
+                // 都道府県
+
+                let pre = area[i-1]["name_jp"]
+
+                // 感染者
+
+                let npa = area[i-1]["npatients"]
+
+                // 色
+
+                if (npa > 10000 ) {
+
+                    let color = "#FF0461"
+
+                    areas.push({"code": i , "name": pre, "color": color, "hoverColor":"#FF367F", "prefectures":[i]})
+
+                } else if( npa > 1000) {
+
+                    let color = "#FFABCE"
+
+                    areas.push({"code": i , "name": pre, "color": color, "hoverColor":"#FFD5EC", "prefectures":[i]})
+
+                } else {
+
+                    let color = "#78FF94"
+
+                    areas.push({"code": i , "name": pre, "color": color, "hoverColor":"#AEFFBD", "prefectures":[i]})
+
+                }
+
+            };
+
+ 
+
+            $("#map-container").japanMap({
+
+                width: 800,
+
+                selection: "area",
+
+                areas  : areas,
+
+                backgroundColor : "#f2fcff",
+
+                borderLineColor: "#f2fcff",
+
+                borderLineWidth : 0.25,
+
+                lineColor : "#a0a0a0",
+
+                lineWidth: 1,
+
+                drawsBoxLine: true,
+
+                // 都道府県名表示
+
+                // showsPrefectureName: true,
+
+                prefectureNameType: "short",
+
+                movesIslands : true,
+
+                fontSize : 10,
+
+                onSelect : function(data){
+
+                    for (let i = 0; i < 47; i++) {
+
+                        let pre = area[i]["name_jp"]
+
+                        if (data.name == pre) {
+
+                            alert(data.name + "\n感染者数　" + area[i]["npatients"] + "人")
+
+                            break
+
+                        }
+
+                    }
+
+                }
+
+                // onHover: function(data){
+
+                //     console.log(data);
+
+                // }
+
+            });
+
+        });
+
+ 
+
+    </script>
+
+ 
+
+</head>
+
+<body>
+
+<div id="map-container"></div>
+
+</body>
+
+</html>
